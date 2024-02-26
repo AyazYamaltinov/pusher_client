@@ -123,7 +123,26 @@ class PusherService: MChannel {
         if(!channelName.starts(with: PusherService.PRESENCE_PREFIX)) {
             channel = _pusherInstance!.subscribe(channelName)
         } else {
-            channel = _pusherInstance!.subscribeToPresenceChannel(channelName: channelName)
+            let presenceChannel = _pusherInstance!.subscribeToPresenceChannel(channelName: channelName)
+            let onMemberAdded = { (member: PusherPresenceChannelMember) in
+                let pusherEvent = Event(eventName: "pusher:member_added", channelName: channelName, userId: member.userId, data:nil)
+                do {
+                    let data = try JSONEncoder().encode(EventStreamResult(pusherEvent: pusherEvent))
+                    StreamHandler.Utils.eventSink!(String(data: data, encoding: .utf8))
+                } catch _ {
+                }
+            }
+            let onMemberRemoved = { (member: PusherPresenceChannelMember) in
+                let pusherEvent = Event(eventName: "pusher:member_removed", channelName: channelName, userId: member.userId, data:nil)
+                do {
+                    let data = try JSONEncoder().encode(EventStreamResult(pusherEvent: pusherEvent))
+                    StreamHandler.Utils.eventSink!(String(data: data, encoding: .utf8))
+                } catch _ {
+                }
+            }
+            presenceChannel.onMemberAdded = onMemberAdded
+            presenceChannel.onMemberRemoved = onMemberRemoved
+            channel  = presenceChannel
             for pEvent in Constants.PresenceEvents.allCases {
                 channel.bind(eventName: pEvent.rawValue, eventCallback: ChannelEventListener.default.onEvent)
             }
