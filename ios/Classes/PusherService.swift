@@ -178,16 +178,18 @@ class PusherService: MChannel {
         let channelName: String = map["channelName"]!
         let eventName: String = map["eventName"]!
         var channel: PusherChannel
-        
-        if(!channelName.starts(with: PusherService.PRESENCE_PREFIX)) {
-            channel = _pusherInstance!.connection.channels.find(name: channelName)!
-            bindedEvents[channelName + eventName] = channel.bind(eventName: eventName, eventCallback: ChannelEventListener.default.onEvent)
-        } else {
-            channel = _pusherInstance!.connection.channels.findPresence(name: channelName)!
-            bindedEvents[channelName + eventName] = channel.bind(eventName: eventName, eventCallback: ChannelEventListener.default.onEvent)
+        if(_pusherInstance != nil){
+            if(!channelName.starts(with: PusherService.PRESENCE_PREFIX)) {
+                 channel = _pusherInstance!.connection.channels.find(name: channelName)!
+                 bindedEvents[channelName + eventName] = channel.bind(eventName: eventName, eventCallback: ChannelEventListener.default.onEvent)
+             } else {
+                 channel = _pusherInstance!.connection.channels.findPresence(name: channelName)!
+                 bindedEvents[channelName + eventName] = channel.bind(eventName: eventName, eventCallback: ChannelEventListener.default.onEvent)
+             }
+
+             Utils.debugLog(msg: "[BIND] \(eventName)")
         }
-        
-        Utils.debugLog(msg: "[BIND] \(eventName)")
+
         result(nil)
     }
     
